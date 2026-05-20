@@ -188,3 +188,12 @@ bindsym $mod+r mode "resize"
 bar {
         status_command i3status
 }
+
+#cambiar el idioma del teclado a latam (esto para el omen15 de lester)
+exec_always setxkbmap latam
+
+# --- Control de Volumen Multimedia ---
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+
