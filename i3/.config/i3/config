@@ -218,3 +218,6 @@ exec_always --no-startup-id picom -b
 
 # Poner el fondo de pantalla 
 exec_always --no-startup-id feh --bg-fill ~/Downloads/wallpaper.jpg 
+
+# --- Tiling dinamico automatico ---
+exec_always --no-startup-id ~/dotfiles/scripts/autotiling
