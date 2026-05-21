@@ -4,7 +4,7 @@
 
 ---
 
-## Herramientas Principales
+##  Herramientas Principales
 
 | Categoría             | Herramienta                                                                 |
 |-----------------------|-----------------------------------------------------------------------------|
@@ -17,7 +17,7 @@
 
 ---
 
-## Instalación y Despliegue Automático
+##  Instalación y Despliegue Automático
 
 El repositorio incluye un script en la raíz que instala todas las dependencias del sistema (audio, brillo, reproductores multimedia y utilidades gráficas).
 
@@ -99,7 +99,7 @@ stow i3 zsh tmux picom scripts
 | `Mod + Shift + 1` … `+ 9`    | **Mover** la ventana activa al workspace número N             |
 | `Mod + Tab`                   | Volver al workspace anteriormente activo (toggle)             |
 
-### Control de Hardware (HP Omen o similares)
+###  Control de Hardware (HP Omen o similares)
 
 | Atajo                   | Acción                                  | Backend         |
 |-------------------------|-----------------------------------------|-----------------|
@@ -111,7 +111,7 @@ stow i3 zsh tmux picom scripts
 | `F9`                    | Play / Pause                            | `playerctl`     |
 | `F10`                   | Siguiente pista                         | `playerctl`     |
 
-### Utilidades
+###  Utilidades
 
 | Atajo      | Acción                                                              |
 |------------|---------------------------------------------------------------------|
@@ -120,7 +120,7 @@ stow i3 zsh tmux picom scripts
 
 ---
 
-## Estructura del Repositorio
+##  Estructura del Repositorio
 
 ```
 dotfiles/
@@ -134,16 +134,120 @@ dotfiles/
 │   └── .config/picom/picom.conf
 ├── scripts/
 │   └── .local/bin/
+├── wallpapers/
+│   └── wallpaper.jpg
 └── setup_kali.sh
 ```
 
 ---
 
-## Notas sobre USB Persistente
+##  Optimizaciones del Sistema (USB Persistente)
 
-- La configuración está optimizada para **minimizar escrituras en flash** y reducir el desgaste del pendrive.
-- Se recomienda montar `/tmp` y los logs en `tmpfs` (RAM) para evitar escrituras innecesarias.
-- Stow crea **enlaces simbólicos**, no copias, lo que mantiene el sistema limpio y fácil de actualizar.
+Para maximizar la vida útil de la memoria flash y minimizar los cuellos de botella por I/O, se aplicaron las siguientes configuraciones a nivel de kernel y sistema de archivos.
+
+### Reducción de escritura en disco (`/etc/fstab`)
+
+Se añadió `noatime` a la partición raíz para evitar que el sistema registre la fecha de "último acceso" cada vez que lee un archivo — por defecto Linux hace esa escritura silenciosamente en cada lectura, lo cual en flash es puro desgaste gratuito.
+
+Además se montaron los directorios de mayor volatilidad directamente en RAM con `tmpfs`:
+
+```fstab
+# === Optimización para USB Flash ===
+tmpfs   /tmp                  tmpfs   defaults,noatime,nosuid,mode=1777,size=512m  0 0
+tmpfs   /var/log              tmpfs   defaults,noatime,nosuid,size=64m             0 0
+tmpfs   /var/tmp              tmpfs   defaults,noatime,nosuid,size=64m             0 0
+tmpfs   /var/lib/pulse        tmpfs   defaults,noatime,nosuid,size=16m             0 0
+tmpfs   /root/.cache          tmpfs   defaults,noatime,nosuid,size=256m            0 0
+```
+
+> **Nota:** Los logs en `tmpfs` se pierden al apagar. En un entorno de auditoría esto es generalmente aceptable, y tiene la ventaja adicional de no dejar rastros de actividad en el pendrive.
+
+Para aplicar los cambios de `fstab` sin reiniciar:
+```bash
+sudo mount -a
+```
+
+### Gestión de memoria RAM y Swap
+
+Con 16 GB de RAM, el kernel no debería tocar swap casi nunca. Para asegurarlo:
+
+```bash
+# Agregar en /etc/sysctl.conf
+vm.swappiness=1
+```
+
+Aplicar sin reiniciar:
+```bash
+sudo sysctl -p
+```
+
+Verificar que quedó:
+```bash
+cat /proc/sys/vm/swappiness  # debe devolver 1
+```
+
+### Caché del navegador en RAM (Firefox)
+
+En `about:config`, se configuraron los siguientes parámetros para que Firefox no escriba caché en el pendrive durante la navegación:
+
+| Parámetro                      | Valor   |
+|--------------------------------|---------|
+| `browser.cache.disk.enable`    | `false` |
+| `browser.cache.memory.enable`  | `true`  |
+
+### Control del historial de Zsh
+
+Se ajustaron los límites en `.zshrc` para que el historial sobreviva a los reinicios (al contrario de enviarlo a `tmpfs`), pero sin crecer descontroladamente:
+
+```zsh
+HISTSIZE=1000
+SAVEHIST=1000
+```
+
+> El historial es especialmente valioso en un entorno de auditoría donde se ejecutan comandos largos y poco frecuentes que conviene recuperar con la flechita arriba.
+
+---
+
+##  Estética (i3wm + Picom)
+
+El entorno visual tiene una temática rojiza oscura, priorizando rendimiento sin sacrificar el apartado visual.
+
+### Tiling dinámico con `autotiling`
+
+Se integró el script `autotiling` (de nwg-piotr) ejecutado en segundo plano desde i3. Convierte el tiling manual de i3wm en un **tiling dinámico en espiral**: el split se elige automáticamente según si el espacio disponible es más ancho o alto, similar a cómo funciona AwesomeWM o bspwm.
+
+```bash
+exec_always --no-startup-id ~/dotfiles/scripts/autotiling
+```
+
+### Colores de bordes (i3wm)
+
+Se reemplazaron los colores por defecto con una paleta personalizada definida en el `config` de i3:
+
+| Variable         | Color     | Uso                                          |
+|------------------|-----------|----------------------------------------------|
+| `$focused_red`   | `#8b0000` | Borde e indicador de la ventana con foco     |
+| `$bg_dark`       | `#1d2021` | Fondo de ventanas inactivas / sin foco       |
+| `$text_light`    | `#ebdbb2` | Texto en las barras de título                |
+
+### Composición gráfica (Picom)
+
+Configurado en `~/.config/picom/picom.conf` con:
+
+- **Transparencias** — 95% para ventanas activas, 85% para inactivas
+- **Sombras suaves** — para dar relieve a las ventanas flotantes
+- **Bordes redondeados** — `corner-radius = 10`, excluyendo barras de estado (`dock`)
+- **Sin blur** — para no activar innecesariamente la GPU durante el trabajo
+
+### Wallpaper con `feh`
+
+El fondo de pantalla se gestiona desde el repositorio (`~/dotfiles/wallpapers/`) y se carga de forma estática y ligera:
+
+```bash
+exec_always --no-startup-id feh --bg-fill ~/dotfiles/wallpapers/wallpaper.jpg
+```
+
+`feh` no genera cachés ocultas ni procesos en segundo plano — carga la imagen una vez y termina.
 
 ---
 
