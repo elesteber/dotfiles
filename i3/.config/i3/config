@@ -221,3 +221,19 @@ exec_always --no-startup-id feh --bg-fill ~/Downloads/wallpaper.jpg
 
 # --- Tiling dinamico automatico ---
 exec_always --no-startup-id ~/dotfiles/scripts/autotiling
+
+# --- Colores de bordes (client) ---
+
+# Define colores personalizados (formato HEX #RRGGBB)
+# Un rojo oscuro/rojizo para que no brille tanto
+set $focused_red #8b0000 
+# El gris oscuro de fondo por defecto
+set $bg_dark #1d2021
+# Un gris claro para texto
+set $text_light #ebdbb2
+
+# FORMATO:      # class                 border           bg             text           indicator       child_border
+client.focused          $focused_red   $focused_red   $text_light    #focused_red         $focused_red
+client.focused_inactive $bg_dark       $bg_dark       $text_light    #484e50         $bg_dark
+client.unfocused        $bg_dark       $bg_dark       #888888        #292d2e         $bg_dark
+client.urgent           #2f343a        #900000        $text_light    #900000         #900000
