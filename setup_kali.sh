@@ -17,9 +17,9 @@ sudo apt install -y i3 i3status tmux git stow
 echo "[+] Instalando controladores de hardware..."
 sudo apt install -y pavucontrol pulseaudio-utils brightnessctl playerctl
 
-# 4. Instalar herramientas de productividad
-echo "[+] Instalando capturador de pantalla y plugins de terminal..."
-sudo apt install -y flameshot zsh-syntax-highlighting zsh-autosuggestions
+# 4. Instalar herramientas de productividad y estética 
+echo "[+] Instalando herramientas de captura, plugins de terminal y entorno visual..."
+sudo apt install -y flameshot zsh-syntax-highlighting zsh-autosuggestions picom feh rofi fastfetch
 
-echo "[*] ¡Paquetes instalados con éxito!"
-echo "[*] Siguiente paso: asegúrate de estar en ~/dotfiles y ejecuta 'stow i3 zsh tmux' para enlazar tus configuraciones."
+echo "[*] ¡Todos los paquetes esenciales han sido instalados con éxito!"
+echo "[*] Siguiente paso opcional: ejecuta 'stow i3 zsh tmux picom' para enlazar tus configuraciones."
